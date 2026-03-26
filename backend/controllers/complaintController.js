@@ -3,7 +3,7 @@ const Complaint = require("../models/Complaint");
 // ✅ Create Complaint
 exports.createComplaint = async (req, res) => {
   try {
-    const { title, description, category } = req.body;
+    const { title, description, category, priority, department, subDepartment } = req.body;
 
     console.log("User from token:", req.user); // debug
 
@@ -11,6 +11,9 @@ exports.createComplaint = async (req, res) => {
       title,
       description,
       category,
+      priority,
+      department,
+      subDepartment,
       user: req.user.id || req.user._id,
     });
 
@@ -38,7 +41,16 @@ exports.getMyComplaints = async (req, res) => {
 // ✅ Get All Complaints (Admin Use Later)
 exports.getAllComplaints = async (req, res) => {
   try {
-    const complaints = await Complaint.find().populate("user", "name email");
+    let complaints;
+
+    if (req.user.role === "department") {
+      complaints = await Complaint.find({
+        department: req.user.department,
+        assignedTo: req.user.department,
+      }).populate("user", "name email");
+    } else {
+      complaints = await Complaint.find().populate("user", "name email");
+    }
 
     res.json(complaints);
   } catch (error) {
